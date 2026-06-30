@@ -464,6 +464,15 @@ st.html(f"""<style>
                 margin-bottom: 10px !important;
             }}
         }}
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            html, body, [class*="css"], p, div, span {
+                font-size: calc({base_size} * 0.8) !important;
+            }
+            h1 { font-size: calc({h1_size} * 0.8) !important; }
+            .stButton>button { font-size: calc({btn_size} * 0.8) !important; }
+            [data-baseweb="dialog"] { width: 95vw !important; max-width: 95vw !important; padding: 10px !important; }
+        }
     </style>
 """)
 
