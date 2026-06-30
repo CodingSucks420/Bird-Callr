@@ -41,12 +41,34 @@ if 'theme' not in st.session_state:
 if 'tour_seen' not in st.session_state:
     st.session_state.tour_seen = False
 
+@st.cache_data(ttl=86400, max_entries=500, show_spinner=False)
+def resolve_bird_name(query_name):
+    if not query_name:
+        return ""
+    try:
+        headers = {"User-Agent": "BirdCallr/1.0 (contact@birdcallr.app)"}
+        url = f"https://en.wikipedia.org/w/api.php?action=query&redirects=1&format=json&titles={urllib.parse.quote(query_name)}"
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            pages = data.get("query", {}).get("pages", {})
+            for page_id, page_data in pages.items():
+                if "title" in page_data:
+                    title = page_data["title"]
+                    if " (bird)" in title:
+                        title = title.replace(" (bird)", "")
+                    return title.title()
+    except Exception:
+        pass
+    return query_name.title()
+
 def set_bird(bird_name):
-    st.session_state.selected_bird = bird_name
-    if bird_name:
-        if bird_name in st.session_state.recent_searches:
-            st.session_state.recent_searches.remove(bird_name)
-        st.session_state.recent_searches.insert(0, bird_name)
+    resolved_name = resolve_bird_name(bird_name)
+    st.session_state.selected_bird = resolved_name
+    if resolved_name:
+        if resolved_name in st.session_state.recent_searches:
+            st.session_state.recent_searches.remove(resolved_name)
+        st.session_state.recent_searches.insert(0, resolved_name)
         if len(st.session_state.recent_searches) > 5:
             st.session_state.recent_searches.pop()
 
