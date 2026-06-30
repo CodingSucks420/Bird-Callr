@@ -163,21 +163,30 @@ def fetch_bird_calls(species_name, api_key, limit=5):
 
 def query_birdnet_api(audio_bytes):
     try:
-        # Instead of using an external API, process locally with birdnetlib
+        import subprocess
         analyzer = get_analyzer()
         
-        # Save audio_bytes to a temporary wav file
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_audio:
-            temp_audio.write(audio_bytes)
-            temp_audio_path = temp_audio.name
+        # Save raw audio_bytes to a temporary file (format unknown, could be webm/mp4 from iOS)
+        with tempfile.NamedTemporaryFile(delete=False) as temp_in:
+            temp_in.write(audio_bytes)
+            temp_in_path = temp_in.name
             
+        temp_out_path = temp_in_path + "_converted.wav"
+        
         try:
-            recording = Recording(analyzer, temp_audio_path, min_conf=0.1)
+            # Forcefully transcode any audio format to a clean 48kHz WAV using ffmpeg
+            subprocess.run([
+                "ffmpeg", "-y", "-i", temp_in_path, 
+                "-ar", "48000", "-ac", "1", "-c:a", "pcm_s16le", temp_out_path
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            if not os.path.exists(temp_out_path):
+                return {"error": "Failed to process audio format from device."}
+                
+            recording = Recording(analyzer, temp_out_path, min_conf=0.1)
             recording.analyze()
             
-            # Extract detections
             if recording.detections:
-                # Get the highest confidence detection
                 best_match = max(recording.detections, key=lambda x: x['confidence'])
                 return {
                     "species": best_match['common_name'],
@@ -187,9 +196,10 @@ def query_birdnet_api(audio_bytes):
             else:
                 return {"error": "No bird sounds detected with enough confidence."}
         finally:
-            # Clean up the temporary file
-            if os.path.exists(temp_audio_path):
-                os.remove(temp_audio_path)
+            if os.path.exists(temp_in_path):
+                os.remove(temp_in_path)
+            if os.path.exists(temp_out_path):
+                os.remove(temp_out_path)
                 
     except Exception as e:
         return {"error": str(e)}
