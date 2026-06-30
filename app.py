@@ -187,12 +187,15 @@ def query_birdnet_api(audio_bytes):
             recording.analyze()
             
             if recording.detections:
-                best_match = max(recording.detections, key=lambda x: x['confidence'])
-                return {
-                    "species": best_match['common_name'],
-                    "confidence": best_match['confidence'],
-                    "scientific_name": best_match['scientific_name']
-                }
+                sorted_matches = sorted(recording.detections, key=lambda x: x['confidence'], reverse=True)[:3]
+                matches_list = []
+                for m in sorted_matches:
+                    matches_list.append({
+                        "species": m['common_name'],
+                        "confidence": m['confidence'],
+                        "scientific_name": m['scientific_name']
+                    })
+                return {"matches": matches_list}
             else:
                 return {"error": "No bird sounds detected with enough confidence."}
         finally:
@@ -503,31 +506,43 @@ with tab_home:
     st.markdown("## 🎙️ Identify by Sound")
     st.write("Hear a bird? Tap the microphone to record its call and instantly identify it!")
     
-    audio_bytes = audio_recorder(text="Tap to Record", recording_color="#ff7e5f", neutral_color="#cbd5e1", icon_name="microphone", icon_size="4x", sample_rate=44100)
+    audio_bytes = audio_recorder(text="Tap to Start / Tap to Stop", recording_color="#ff7e5f", neutral_color="#cbd5e1", icon_name="microphone", icon_size="4x", sample_rate=44100)
     
     if audio_bytes:
         st.audio(audio_bytes, format="audio/wav")
         
-        # Premium Lottie/Radar Animation while fetching
-        anim_ph = st.empty()
-        anim_ph.markdown("<div style='text-align:center;'><div class='radar-pulse'></div><p style='color:#ff7e5f; font-weight:bold;'>AI is listening...</p></div>", unsafe_allow_html=True)
-        
-        result = query_birdnet_api(audio_bytes)
-        
-        anim_ph.empty() # Clear animation
+        if "last_audio" not in st.session_state or st.session_state.last_audio != audio_bytes:
+            anim_ph = st.empty()
+            anim_ph.markdown("<div style='text-align:center;'><div class='radar-pulse'></div><p style='color:#ff7e5f; font-weight:bold;'>AI is listening...</p></div>", unsafe_allow_html=True)
+            
+            st.session_state.last_audio_result = query_birdnet_api(audio_bytes)
+            st.session_state.last_audio = audio_bytes
+            
+            anim_ph.empty()
+            
+        result = st.session_state.last_audio_result
         
         if "error" in result:
             st.warning(f"Analysis failed: {result['error']}")
             if st.button("Try a Simulated Match Instead"):
-                st.success("Simulated Match: **Northern Cardinal** (98% Confidence)")
                 set_bird("Northern Cardinal")
                 st.rerun()
         else:
-            species = result.get('species', 'Unknown')
-            conf = result.get('confidence', 0)
-            st.success(f"Identification complete! It's a **{species}**! ({(conf*100):.1f}% confidence)")
-            set_bird(species)
-            st.rerun()
+            matches = result.get('matches', [])
+            if matches:
+                top_match = matches[0]
+                species = top_match['species']
+                conf = top_match['confidence']
+                
+                st.success(f"Top Match: **{species}** ({(conf*100):.1f}%)")
+                
+                if len(matches) > 1:
+                    other_text = ", ".join([f"{m['species']} ({(m['confidence']*100):.1f}%)" for m in matches[1:3]])
+                    st.info(f"Other possibilities: {other_text}")
+                    
+                if st.button(f"Load {species} Audio Results", use_container_width=True):
+                    set_bird(species)
+                    st.rerun()
 
     st.markdown("---")
 
