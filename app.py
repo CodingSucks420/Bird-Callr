@@ -709,15 +709,25 @@ with tab_home:
                 st.info(f"We don't have a curated grid for {fam} yet, but you can search for them above!")
         else:
             st.markdown("## 🔍 Discover Something New")
-            title, fact, bird_hint = secrets.choice(TRIVIA)
+            if "current_trivia" not in st.session_state:
+                st.session_state.current_trivia = secrets.choice(TRIVIA)
+            
+            title, fact, bird_hint = st.session_state.current_trivia
             img = fetch_bird_image(bird_hint)
             
             st.info(f"**{title}**\n{fact}")
             if img:
                 st.image(img, use_container_width=True, clamp=True)
-            if st.button(f"Listen to {bird_hint}", use_container_width=True):
-                set_bird(bird_hint)
-                st.rerun()
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(f"Listen to {bird_hint}", use_container_width=True):
+                    set_bird(bird_hint)
+                    st.rerun()
+            with col2:
+                if st.button("🔄 Next Fact", use_container_width=True):
+                    st.session_state.current_trivia = secrets.choice(TRIVIA)
+                    st.rerun()
 
 
 # ----------------------------------------
