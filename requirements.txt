@@ -4,3 +4,5 @@ audio-recorder-streamlit==0.0.10
 birdnetlib==0.18.1
 tensorflow==2.15.0; sys_platform == 'win32'
 tensorflow; sys_platform != 'win32'
+librosa
+pydub
