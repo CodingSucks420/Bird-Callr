@@ -484,7 +484,7 @@ with tab_home:
     st.markdown("## 🎙️ Identify by Sound")
     st.write("Hear a bird? Tap the microphone to record its call and instantly identify it!")
     
-    audio_bytes = audio_recorder(text="Tap to Record", recording_color="#ff7e5f", neutral_color="#cbd5e1", icon_name="microphone", icon_size="4x")
+    audio_bytes = audio_recorder(text="Tap to Record", recording_color="#ff7e5f", neutral_color="#cbd5e1", icon_name="microphone", icon_size="4x", sample_rate=44100)
     
     if audio_bytes:
         st.audio(audio_bytes, format="audio/wav")
