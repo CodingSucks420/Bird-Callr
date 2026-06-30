@@ -801,6 +801,19 @@ st.html("""
                     tabButtons[nextIndex].click();
                 }
             }
+            
+            // Prevent multiple audio elements from playing simultaneously
+            document.addEventListener('play', function(e){
+                if(e.target.tagName === 'AUDIO'){
+                    const audios = document.getElementsByTagName('audio');
+                    for(let i = 0, len = audios.length; i < len; i++){
+                        if(audios[i] !== e.target){
+                            audios[i].pause();
+                        }
+                    }
+                }
+            }, true);
+
             window.optimizationsAttached = true;
         }
     </script>
