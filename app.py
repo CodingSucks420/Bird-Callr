@@ -695,64 +695,63 @@ with tab_home:
                     st.audio(audio_url)
                 else:
                     st.warning("Audio file unavailable for this recording.")
-    else:
-        BIRD_FAMILIES = {
-            "Cardinalidae": ["Northern Cardinal", "Rose-breasted Grosbeak", "Indigo Bunting", "Dickcissel"],
-            "Corvidae": ["Blue Jay", "American Crow", "Common Raven", "Steller's Jay"],
-            "Fringillidae": ["American Goldfinch", "House Finch", "Purple Finch", "Pine Siskin"],
-            "Turdidae": ["American Robin", "Eastern Bluebird", "Wood Thrush", "Hermit Thrush"],
-            "Paridae": ["Tufted Titmouse", "Black-capped Chickadee", "Carolina Chickadee", "Mountain Chickadee"],
-            "Columbidae": ["Mourning Dove", "Rock Pigeon", "Eurasian Collared-Dove", "White-winged Dove"],
-            "Troglodytidae": ["Carolina Wren", "House Wren", "Winter Wren", "Marsh Wren"],
-            "Picidae": ["Downy Woodpecker", "Hairy Woodpecker", "Red-bellied Woodpecker", "Northern Flicker"]
-        }
-        
-        TRIVIA = [
-            ("Did you know?", "The Northern Cardinal is the state bird of seven U.S. states, more than any other species!", "Northern Cardinal"),
-            ("Fun Fact", "Blue Jays are known to mimic the calls of hawks, especially the Red-shouldered Hawk, to see if predators are around.", "Blue Jay"),
-            ("Did you know?", "A woodpecker's tongue can wrap all the way around its brain to cushion it from heavy impacts!", "Downy Woodpecker"),
-            ("Fun Fact", "Hummingbirds are the only birds that can fly backwards and hover in mid-air.", "Ruby-throated Hummingbird")
-        ]
-        
-        if st.session_state.explore_family:
-            fam = st.session_state.explore_family
-            st.markdown(f"## 🧬 Exploring Family: {fam}")
-            if st.button("⬅️ Back"):
-                st.session_state.explore_family = ""
-                st.rerun()
-                
-            family_birds = BIRD_FAMILIES.get(fam, [])
-            if family_birds:
-                st.write(f"Discover other fascinating species in the {fam} family:")
-                cols = st.columns(2)
-                for i, b in enumerate(family_birds):
-                    with cols[i % 2]:
-                        if st.button(b, key=f"fam_grid_{b}", use_container_width=True):
-                            set_bird(b)
-                            st.rerun()
-            else:
-                st.info(f"We don't have a curated grid for {fam} yet, but you can search for them above!")
+    BIRD_FAMILIES = {
+        "Cardinalidae": ["Northern Cardinal", "Rose-breasted Grosbeak", "Indigo Bunting", "Dickcissel"],
+        "Corvidae": ["Blue Jay", "American Crow", "Common Raven", "Steller's Jay"],
+        "Fringillidae": ["American Goldfinch", "House Finch", "Purple Finch", "Pine Siskin"],
+        "Turdidae": ["American Robin", "Eastern Bluebird", "Wood Thrush", "Hermit Thrush"],
+        "Paridae": ["Tufted Titmouse", "Black-capped Chickadee", "Carolina Chickadee", "Mountain Chickadee"],
+        "Columbidae": ["Mourning Dove", "Rock Pigeon", "Eurasian Collared-Dove", "White-winged Dove"],
+        "Troglodytidae": ["Carolina Wren", "House Wren", "Winter Wren", "Marsh Wren"],
+        "Picidae": ["Downy Woodpecker", "Hairy Woodpecker", "Red-bellied Woodpecker", "Northern Flicker"]
+    }
+    
+    TRIVIA = [
+        ("Did you know?", "The Northern Cardinal is the state bird of seven U.S. states, more than any other species!", "Northern Cardinal"),
+        ("Fun Fact", "Blue Jays are known to mimic the calls of hawks, especially the Red-shouldered Hawk, to see if predators are around.", "Blue Jay"),
+        ("Did you know?", "A woodpecker's tongue can wrap all the way around its brain to cushion it from heavy impacts!", "Downy Woodpecker"),
+        ("Fun Fact", "Hummingbirds are the only birds that can fly backwards and hover in mid-air.", "Ruby-throated Hummingbird")
+    ]
+    
+    if st.session_state.explore_family:
+        fam = st.session_state.explore_family
+        st.markdown(f"## 🧬 Exploring Family: {fam}")
+        if st.button("⬅️ Back"):
+            st.session_state.explore_family = ""
+            st.rerun()
+            
+        family_birds = BIRD_FAMILIES.get(fam, [])
+        if family_birds:
+            st.write(f"Discover other fascinating species in the {fam} family:")
+            cols = st.columns(2)
+            for i, b in enumerate(family_birds):
+                with cols[i % 2]:
+                    if st.button(b, key=f"fam_grid_{b}", use_container_width=True):
+                        set_bird(b)
+                        st.rerun()
         else:
-            st.markdown("## 🔍 Discover Something New")
-            if "current_trivia" not in st.session_state:
+            st.info(f"We don't have a curated grid for {fam} yet, but you can search for them above!")
+    else:
+        st.markdown("## 🔍 Discover Something New")
+        if "current_trivia" not in st.session_state:
+            st.session_state.current_trivia = secrets.choice(TRIVIA)
+        
+        title, fact, bird_hint = st.session_state.current_trivia
+        img = fetch_bird_image(bird_hint)
+        
+        st.info(f"**{title}**\n{fact}")
+        if img:
+            st.image(img, use_container_width=True, clamp=True)
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button(f"Listen to {bird_hint}", use_container_width=True):
+                set_bird(bird_hint)
+                st.rerun()
+        with col2:
+            if st.button("🔄 Next Fact", use_container_width=True):
                 st.session_state.current_trivia = secrets.choice(TRIVIA)
-            
-            title, fact, bird_hint = st.session_state.current_trivia
-            img = fetch_bird_image(bird_hint)
-            
-            st.info(f"**{title}**\n{fact}")
-            if img:
-                st.image(img, use_container_width=True, clamp=True)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button(f"Listen to {bird_hint}", use_container_width=True):
-                    set_bird(bird_hint)
-                    st.rerun()
-            with col2:
-                if st.button("🔄 Next Fact", use_container_width=True):
-                    st.session_state.current_trivia = secrets.choice(TRIVIA)
-                    st.rerun()
+                st.rerun()
 
 
 # ----------------------------------------
