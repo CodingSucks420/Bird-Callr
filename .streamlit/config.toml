@@ -1,0 +1,2 @@
+[server]
+# enableStaticServe is true by default in modern Streamlit.

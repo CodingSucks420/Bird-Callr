@@ -1,0 +1,9 @@
+{
+  "short_name": "Bird Callr",
+  "name": "Bird Callr: Aviary Audio Companion",
+  "icons": [],
+  "start_url": "./",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "theme_color": "#ff7e5f"
+}
